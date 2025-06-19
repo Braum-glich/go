@@ -1,0 +1,132 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+#define MAX_HIJOS 10
+
+class Persona {
+public:
+    string nombre;
+    Persona* padre;
+    Persona* madre;
+    Persona* hijos[MAX_HIJOS];
+    int numHijos;
+
+    Persona(string n) {
+        nombre = n;
+        padre = nullptr;
+        madre = nullptr;
+        numHijos = 0;
+    }
+
+    void agregarHijo(Persona* hijo) {
+        if (numHijos < MAX_HIJOS) {
+            hijos[numHijos++] = hijo;
+        } else {
+            cout << "No se pueden agregar más hijos a " << nombre << endl;
+        }
+    }
+};
+
+void mostrarAncestros(Persona* p, int nivel = 0) {
+    if (p == nullptr) return;
+    for (int i = 0; i < nivel; i++) cout << "  ";
+    cout << "- " << p->nombre << endl;
+    mostrarAncestros(p->padre, nivel + 1);
+    mostrarAncestros(p->madre, nivel + 1);
+}
+
+void mostrarDescendientes(Persona* p, int nivel = 0) {
+    if (p == nullptr) return;
+    for (int i = 0; i < nivel; i++) cout << "  ";
+    cout << "- " << p->nombre << endl;
+    for (int i = 0; i < p->numHijos; i++) {
+        mostrarDescendientes(p->hijos[i], nivel + 1);
+    }
+}
+
+Persona* buscarPersona(Persona* raiz, const string& nombre) {
+    if (raiz == nullptr) return nullptr;
+    if (raiz->nombre == nombre) return raiz;
+    for (int i = 0; i < raiz->numHijos; i++) {
+        Persona* encontrada = buscarPersona(raiz->hijos[i], nombre);
+        if (encontrada != nullptr) return encontrada;
+    }
+    return nullptr;
+}
+
+void menu(Persona*& raiz) {
+    int opcion;
+    string nombre, nombrePadre, nombreMadre;
+
+    do {
+        cout << "\n--- Árbol Genealógico ---\n";
+        cout << "1. Mostrar ancestros\n";
+        cout << "2. Mostrar descendientes\n";
+        cout << "3. Agregar miembro\n";
+        cout << "4. Salir\n";
+        cout << "Opción: ";
+        cin >> opcion;
+
+        switch (opcion) {
+            case 1:
+                cout << "Nombre de la persona: ";
+                cin >> nombre;
+                mostrarAncestros(buscarPersona(raiz, nombre));
+                break;
+            case 2:
+                cout << "Nombre de la persona: ";
+                cin >> nombre;
+                mostrarDescendientes(buscarPersona(raiz, nombre));
+                break;
+            case 3: {
+                cout << "Nombre del nuevo miembro: ";
+                cin >> nombre;
+                Persona* nueva = new Persona(nombre);
+
+                cout << "Nombre del padre (si se conoce): ";
+                cin >> nombrePadre;
+                Persona* padre = buscarPersona(raiz, nombrePadre);
+
+                cout << "Nombre de la madre (si se conoce): ";
+                cin >> nombreMadre;
+                Persona* madre = buscarPersona(raiz, nombreMadre);
+
+                nueva->padre = padre;
+                nueva->madre = madre;
+
+                if (padre != nullptr) padre->agregarHijo(nueva);
+                if (madre != nullptr) madre->agregarHijo(nueva);
+
+                if (raiz == nullptr) {
+                    raiz = nueva;
+                    cout << "Miembro raíz agregado.\n";
+                }
+                break;
+            }
+            case 4:
+                cout << "Saliendo del programa.\n";
+                break;
+            default:
+                cout << "Opción inválida.\n";
+        }
+    } while (opcion != 4);
+}
+
+int main() {
+    Persona* raiz = new Persona("Fundador");
+
+    Persona* hijo1 = new Persona("Hijo1");
+    Persona* hija1 = new Persona("Hija1");
+
+    hijo1->padre = raiz;
+    hija1->padre = raiz;
+
+    raiz->agregarHijo(hijo1);
+    raiz->agregarHijo(hija1);
+
+    menu(raiz);
+
+    return 0;
+}
